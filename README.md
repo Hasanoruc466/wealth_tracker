@@ -25,14 +25,19 @@
 ## Kurulum ve Kullanım 🚀
 
 1. **Projeyi Klonlayın:**
-   git clone https://github.com/kullaniciadi/wealth_tracker.git
-   cd wealth_tracker
-   
-2. **Gerekli Paketleri Kurun:**
-   flutter pub get
-   
-3. **Simülatörde veya Gerçek Cihazda Çalıştırın:**
-   flutter run
+```bash
+git clone https://github.com/kullaniciadi/wealth_tracker.git
+cd wealth_tracker 
+```
+
+3. **Gerekli Paketleri Kurun:**
+```bash
+flutter pub get
+```
+5. **Simülatörde veya Gerçek Cihazda Çalıştırın:**
+```bash
+flutter run
+```
 
 ## Kullanılan Public API'ler
 
