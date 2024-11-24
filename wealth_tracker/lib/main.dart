@@ -64,7 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _getAssets() {
-    if (assetList != []) {
+    if (assetList.isNotEmpty) {
+      _totalValue = 0;
       for (var asset in assetList) {
         double assetPrice;
         if (asset.assetType == 'Döviz') {
@@ -90,7 +91,13 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         });
       }
-    }
+    }else {
+    // Eğer assetList boşsa, toplam değeri sıfırla
+    setState(() {
+      _totalValue = 0;
+      _assets.clear();
+    });
+  }
   }
 
   void _addAsset(String assetName, double amount, String assetType) {

@@ -16,7 +16,7 @@ String getGoldName(var key){
       return '14 Ayar Altın';
     case '18-ayar-altin':
       return '18 Ayar Altın';
-    case '22-ayar-altin':
+    case '22-ayar-bilezik':
       return '22 Ayar Altın';
     case 'resat-altin':
       return 'Reşat Altın';

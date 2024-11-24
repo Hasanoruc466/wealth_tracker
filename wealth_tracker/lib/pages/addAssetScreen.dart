@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:wealth_tracker/model/crypto.dart';
 import 'package:wealth_tracker/model/goldAndCurrency.dart';
 
@@ -77,6 +78,22 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                 child: TextField(
                   controller: _amountController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      // Eğer virgül varsa, onu nokta ile değiştir
+                      String newText = newValue.text.replaceAll(',', '.');
+                      if (newText.startsWith('0') &&
+                          newText.length > 1 &&
+                          !newText.startsWith('0.')) {
+                        newText = newText.replaceFirst(RegExp(r'^0+'), '');
+                      }
+                      return TextEditingValue(
+                        text: newText,
+                        selection:
+                            TextSelection.collapsed(offset: newText.length),
+                      );
+                    }),
+                  ],
                   decoration: const InputDecoration(
                     labelText: "Miktar",
                     border: OutlineInputBorder(),
