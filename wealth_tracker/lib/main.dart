@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:wealth_tracker/model/asset.dart';
+import 'package:wealth_tracker/model/crypto.dart';
+import 'package:wealth_tracker/service/cryptoService.dart';
+import 'package:wealth_tracker/service/currencyService.dart';
+import 'package:wealth_tracker/service/goldService.dart';
+import 'package:wealth_tracker/service/shared_prefences.dart';
+import 'pages/addAssetScreen.dart';
+import 'package:wealth_tracker/model/goldAndCurrency.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,119 +16,254 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomeScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _HomeScreenState extends State<HomeScreen> {
+  final CryptoService _cryptoService = CryptoService();
+  final CurrencyService _currencyService = CurrencyService();
+  final GoldService _goldService = GoldService();
+  List<Crypto>? cryptoData;
+  List<GoldAndCurrency>? currencyData;
+  List<GoldAndCurrency>? goldData;
+  final List<Map<String, dynamic>> _assets = [];
+  List<Asset> assetList = [];
+  double _totalValue = 0.0;
+  bool _isLoading = true;
 
-  void _incrementCounter() {
+  // Sayfa ilk kez açıldığında veriyi yükle
+  @override
+  void initState() {
+    super.initState();
+    fetchCryptoData();
+  }
+
+  void fetchCryptoData() async {
+    //removeAssetList();
+    currencyData = await _currencyService.fetchCurrencyData();
+    cryptoData = await _cryptoService.fetchCryptoData();
+    goldData = await _goldService.fetchGoldData();
+    assetList = await loadAssetList();
+    _getAssets();
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _isLoading = false;
     });
   }
 
+  void _getAssets() {
+    if (assetList != []) {
+      for (var asset in assetList) {
+        double assetPrice;
+        if (asset.assetType == 'Döviz') {
+          assetPrice =
+              currencyData!.firstWhere((c) => c.fullName == asset.name).buy;
+        } else if (asset.assetType == 'Kripto') {
+          assetPrice = cryptoData!
+              .firstWhere((c) => c.assetCode == asset.name)
+              .currentPrice;
+        } else {
+          assetPrice =
+              goldData!.firstWhere((c) => c.fullName == asset.name).buy;
+        }
+        double total = asset.amount * assetPrice;
+        _totalValue += total;
+        setState(() {
+          _assets.add({
+            'type': asset.name,
+            'amount': asset.amount,
+            'assetType': asset.assetType,
+            'price': assetPrice,
+            'total': total,
+          });
+        });
+      }
+    }
+  }
+
+  void _addAsset(String assetName, double amount, String assetType) {
+    int index = assetList.indexWhere((a) => a.name == assetName);
+    Asset asset = assetList.firstWhere((a) => a.name == assetName,
+        orElse: () =>
+            Asset(assetType: assetType, name: assetName, amount: amount));
+    if (index != -1) {
+      asset.amount += amount;
+      assetList.removeAt(index);
+    }
+    assetList.add(asset);
+    removeAssetList();
+    saveAssetList(assetList);
+    _assets.clear();
+    _getAssets();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text("Varlıklarım", style: TextStyle(fontSize: 16)),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    "Toplam Bakiye: ${NumberFormat('#,##0.00', 'tr').format(_totalValue)} TL",
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _assets.length,
+                    itemBuilder: (context, index) {
+                      final asset = _assets[index];
+                      NumberFormat amountFormat = NumberFormat.decimalPattern('tr')
+                        ..maximumFractionDigits = 10
+                        ..minimumFractionDigits = 2;
+                      return ListTile(
+                        title: Text("${asset['type']}",
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold)),
+                        subtitle: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start, // Metinleri sola hizala
+                          children: [
+                            Text(
+                              "Miktar: ${amountFormat.format(asset['amount'])}",
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            Text(
+                              "Fiyat: ${NumberFormat('#,##0.00', 'tr').format(asset['price'])} TL",
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            Text(
+                              "Toplam: ${NumberFormat('#,##0.00', 'tr').format(asset['total'])} TL",
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight
+                                      .bold), // Toplam için kalın yazı
+                            ),
+                          ],
+                        ),
+                        trailing: Text("${asset['assetType']}",
+                            style: const TextStyle(fontSize: 14)),
+                        onTap: () => _ontListTileTap(context, asset),
+                        onLongPress: () => _onListTileLongPress(context, asset),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: currencyData != null && cryptoData != null
+            ? () {
+                _openAddAssetPopup(context);
+              }
+            : null,
+        backgroundColor: const Color.fromARGB(255, 12, 52, 68),
+        child: const Icon(Icons.add, color: Color.fromARGB(255, 241, 246, 250)),
+      ),
+    );
+  }
+
+  void _openAddAssetPopup(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddAssetScreen(
+          onAdd: _addAsset,
+          cryptoData: cryptoData!,
+          currencyData: currencyData!,
+          goldData: goldData!,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void _ontListTileTap(BuildContext context, Map<String, dynamic> paramAsset) {
+    double amount = paramAsset['amount'];
+    final amountController = TextEditingController(text: amount.toString());
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Güncelle", style: TextStyle(fontSize: 14)),
+            content: Column(mainAxisSize: MainAxisSize.min, children: [
+              const SizedBox(height: 10),
+              TextField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Miktar",
+                  border: OutlineInputBorder(),
+                ),
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 10),
+            ]),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    int index = assetList
+                        .indexWhere((a) => a.name == paramAsset['type']);
+                    Asset? asset = assetList
+                        .firstWhere((a) => a.name == paramAsset['type']);
+                    asset.amount =
+                        double.tryParse(amountController.text) ?? 0.0;
+                    assetList.removeAt(index);
+                    assetList.add(asset);
+                    removeAssetList();
+                    saveAssetList(assetList);
+                    _assets.clear();
+                    _getAssets();
+                    Navigator.of(context).pop(); // Popup'ı kapat
+                  },
+                  child: const Text("Onayla", style: TextStyle(fontSize: 14)))
+            ],
+          );
+        });
+  }
+
+  void _onListTileLongPress(
+      BuildContext context, Map<String, dynamic> paramAsset) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Silme", style: TextStyle(fontSize: 14)),
+            content: const Text("Veriyi silmek istediğinize emin misiniz?",
+                style: TextStyle(fontSize: 14)),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    int index = assetList
+                        .indexWhere((a) => a.name == paramAsset['type']);
+                    assetList.removeAt(index);
+                    removeAssetList();
+                    saveAssetList(assetList);
+                    _assets.clear();
+                    _getAssets();
+                    Navigator.of(context).pop(); // Popup'ı kapat
+                  },
+                  child: const Text("Onayla", style: TextStyle(fontSize: 14)))
+            ],
+          );
+        });
   }
 }
