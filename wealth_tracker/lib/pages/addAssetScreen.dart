@@ -24,7 +24,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   final _amountController = TextEditingController();
   String _selectedAsset = "";
   String _selectedAssetType = "Döviz";
-  final List<String> _assetType = <String>["Döviz", "Altın", "Kripto"];
+  final List<String> _assetType = <String>["Döviz", "Altın", "Kripto", "TL"];
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +161,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           child: Text(crypto.assetCode, style: const TextStyle(fontSize: 14)),
         );
       }).toList();
-    } else {
+    } else if (_selectedAssetType == "Altın") {
       return widget.goldData
           .map<DropdownMenuItem<String>>((GoldAndCurrency gold) {
         return DropdownMenuItem<String>(
@@ -169,6 +169,10 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
           child: Text(gold.fullName, style: const TextStyle(fontSize: 14)),
         );
       }).toList();
+    } else {
+      List<DropdownMenuItem<String>> list = [];
+      list.add(const DropdownMenuItem<String>(value: "TL", child: Text("TL", style: TextStyle(fontSize: 14),)));
+      return List.of(list);
     }
   }
 }
