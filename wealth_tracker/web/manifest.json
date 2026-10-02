@@ -1,11 +1,11 @@
 {
-    "name": "wealth_tracker",
-    "short_name": "wealth_tracker",
+    "name": "Kese",
+    "short_name": "Kese",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#111113",
+    "theme_color": "#111113",
+    "description": "Net varlık takibi: altın, döviz, kripto ve borçlar.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

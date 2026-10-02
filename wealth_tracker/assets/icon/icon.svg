@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <mask id="gaps">
+      <rect width="1024" height="1024" fill="white"/>
+      <line x1="512.0" y1="512.0" x2="512.00" y2="-122.88" stroke="black" stroke-width="17.78"/>
+      <line x1="512.0" y1="512.0" x2="1001.18" y2="916.69" stroke="black" stroke-width="17.78"/>
+      <line x1="512.0" y1="512.0" x2="77.39" y2="974.81" stroke="black" stroke-width="17.78"/>
+      <line x1="512.0" y1="512.0" x2="-62.46" y2="241.68" stroke="black" stroke-width="17.78"/>
+    </mask>
+  </defs>
+  <rect width="1024" height="1024" fill="#111113"/>
+  <g mask="url(#gaps)">
+    <path d="M 512.00 251.70 A 260.30 260.30 0 0 1 712.57 677.92" stroke="#D9A21B" stroke-width="114.28" fill="none"/>
+    <path d="M 712.57 677.92 A 260.30 260.30 0 0 1 333.81 701.75" stroke="#3E7BFA" stroke-width="114.28" fill="none"/>
+    <path d="M 333.81 701.75 A 260.30 260.30 0 0 1 276.47 401.17" stroke="#8B5CF6" stroke-width="114.28" fill="none"/>
+    <path d="M 276.47 401.17 A 260.30 260.30 0 0 1 512.00 251.70" stroke="#14B8A6" stroke-width="114.28" fill="none"/>
+  </g>
+</svg>
