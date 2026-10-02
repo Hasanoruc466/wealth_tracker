@@ -223,18 +223,20 @@ void main() {
         person: 'Mehmet',
         type: AssetType.currency,
         code: 'USD',
-        amount: 50, // 2000, -%0,5
+        amount: 50, // satış 40,1 → 2005, -%0,5
       ));
     await container.read(marketProvider.future);
 
     var worth = container.read(netWorthProvider);
-    expect(worth.debts.lent, 6000);
-    expect(worth.debts.borrowed, 2000);
-    expect(worth.total, 10000 + 6000 - 2000);
+    // Alacak alış (bozdurma), borç satış (geri ödemek için satın alma)
+    // fiyatıyla değerlenir.
+    expect(worth.debts.lent, 2 * gramGold.buy);
+    expect(worth.debts.borrowed, closeTo(50 * usd.sell, 1e-9));
+    expect(worth.total, closeTo(10000 + 6000 - 2005, 1e-9));
     // Alacak değer kazanınca net artar, borç değer kaybedince de net artar.
     expect(
       worth.dailyChange,
-      closeTo((6000 - 6000 / 1.01) - (2000 - 2000 / 0.995), 1e-6),
+      closeTo((6000 - 6000 / 1.01) - (2005 - 2005 / 0.995), 1e-6),
     );
 
     // Kalıcıdır; kapatılan kayıt geri alınabilir.
@@ -243,7 +245,7 @@ void main() {
     expect(reloaded.map((d) => d.person), ['Ayşe', 'Mehmet']);
     debts.save(debts.remove('2')!);
     worth = container.read(netWorthProvider);
-    expect(worth.total, 14000);
+    expect(worth.total, closeTo(13995, 1e-9));
 
     // Düzenleme aynı kimlikteki kaydı değiştirir.
     debts.save(const Debt(
@@ -255,7 +257,8 @@ void main() {
       amount: 500,
     ));
     expect(container.read(debtsProvider), hasLength(2));
-    expect(container.read(netWorthProvider).total, 10000 + 500 - 2000);
+    expect(container.read(netWorthProvider).total,
+        closeTo(10000 + 500 - 2005, 1e-9));
   });
 
   test('vadesi geçmiş borç bugünden önceki tarihe göre belirlenir', () {

@@ -324,7 +324,12 @@ class DebtValue {
 
   String get assetName => quote?.name ?? displayName(debt.type, debt.code);
 
-  double get value => debt.amount * (quote?.price ?? 0);
+  /// Borçlar satış, alacaklar alış fiyatıyla değerlenir; bkz.
+  /// [DebtDirection.unitPrice].
+  double get value {
+    final quote = this.quote;
+    return quote == null ? 0 : debt.amount * debt.direction.unitPrice(quote);
+  }
 
   /// Bugünkü değişimin TL karşılığı (borcun kendi değerindeki değişim).
   double get dailyChange {

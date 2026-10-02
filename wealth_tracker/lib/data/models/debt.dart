@@ -1,4 +1,5 @@
 import 'asset_type.dart';
+import 'quote.dart';
 
 /// Borcun yönü.
 enum DebtDirection {
@@ -15,6 +16,11 @@ enum DebtDirection {
 
   /// Ekleme ekranındaki seçenek.
   final String action;
+
+  /// Birim değer. Alacak, geri alındığında bozdurulacağı için alış fiyatıyla;
+  /// borç, ödemek için varlığın piyasadan satın alınması gerektiğinden satış
+  /// fiyatıyla değerlenir.
+  double unitPrice(Quote quote) => this == lent ? quote.buy : quote.sell;
 }
 
 /// Bir kişiyle arasındaki borç ya da alacak. Miktar herhangi bir varlık

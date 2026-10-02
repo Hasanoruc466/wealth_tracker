@@ -220,11 +220,16 @@ class _DebtSheetState extends ConsumerState<DebtSheet> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Text('Bugünkü değeri', style: TextStyle(color: palette.muted)),
+                Text(
+                  _direction == DebtDirection.borrowed
+                      ? 'Bugün ödemek için'
+                      : 'Bugünkü değeri',
+                  style: TextStyle(color: palette.muted),
+                ),
                 const Spacer(),
                 Text(
                   amount != null && quote != null
-                      ? Fmt.money(amount * quote.price)
+                      ? Fmt.money(amount * _direction.unitPrice(quote))
                       : '—',
                   style: const TextStyle(
                     fontSize: 15,
